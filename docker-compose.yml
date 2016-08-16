@@ -1,0 +1,32 @@
+elasticsearch:
+  image: elasticsearch:latest
+  command: elasticsearch -Des.network.host=0.0.0.0
+  environment:
+    ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+  ports:
+    - "9200:9200"
+    - "9300:9300"
+  volumes:
+    - /root/config/elasticsearch.yml:/opt/elasticsearch/config/elasticsearch.yml
+
+logstash:
+  image: logstash:latest
+  links:
+    - elasticsearch:elasticsearch
+  volumes:
+    - /root/config/logstash.conf:/etc/logstash.conf
+  ports:
+    - "5000:5000"
+    - "5000:5000/udp"
+  environment:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+  command: --allow-env -f /etc/logstash.conf
+
+kibana:
+  build: Dockerfiles/
+  dockerfile: Dockerfile-kibana-timelion
+  links:
+    - elasticsearch:elasticsearch
+  ports:
+    - "5601:5601"
